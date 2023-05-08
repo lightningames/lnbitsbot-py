@@ -8,6 +8,7 @@ Basic outline with lnbits as the backend for a python TG bot:
 - create and send invoices 
 - pay lightning invoices
 - link user to lnbits web interface
+- Use the [pylnbits sdk](github.com/lightningames/pylnbits)
 
 
 Getting Started
