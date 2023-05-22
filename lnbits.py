@@ -65,9 +65,10 @@ class LnbitsAPI:
             uw = UserWallet(self.config, self.session)
             try:
                 invoice_status = await uw.check_invoice(payment_hash)
+                # print("Invoice status (LnbitsAPI):", invoice_status)
                 return invoice_status
             except Exception as e:
-                print('Error while checking invoice (LnbitsAPI):', e)
+                print("Error while checking invoice (LnbitsAPI):", e)
                 return None
 
     async def delete_paylink(self, pay_id):
