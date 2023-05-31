@@ -1,20 +1,15 @@
-# Use an official Python runtime as a parent image
-FROM python:3.11.2-slim
+FROM python:3.11
 
-# Set the working directory to /app
-WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    python3-setuptools \
+    python3-wheel
 
-# Copy the current directory contents and .env file into the container at /app
-COPY . /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+COPY . .
 
-# Make port 80 available to the world outside this container
-EXPOSE 80
-
-# Define environment variable
-ENV NAME World
-
-# Run bot.py when the container launches
 CMD ["python", "bot.py"]
