@@ -6,3 +6,4 @@ placeholder.py
 bot.session
 bot.session-journal
 __pycache__
+config.yml

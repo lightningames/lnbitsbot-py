@@ -23,3 +23,11 @@ pip install -e .
 ```
 
 See .env.example for the specific ID, Hash, and Token you will need to create your own bot.
+
+You will need to create a config.yml file in the root directory with the following information:
+
+```yaml
+lnbits_url: ""
+in_key: ""
+admin_key: ""
+```
