@@ -8,6 +8,9 @@ class LnbitsAPI:
         self.config = Config(config_file=config_file)
         self.session = ClientSession()
 
+    async def close(self):
+        await self.session.close()
+
     async def get_wallet_details(self):
         async with self.session:
             uw = UserWallet(self.config, self.session)
@@ -86,6 +89,3 @@ class LnbitsAPI:
             except Exception as e:
                 print("Error while paying invoice (LnbitsAPI):", e)
                 return None
-
-    async def close(self):
-        await self.session.close()

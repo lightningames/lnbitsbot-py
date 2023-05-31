@@ -191,20 +191,27 @@ async def handle_callback_query(event):
     async with client.conversation(event.chat_id, timeout=60) as conv:
         if data == b"create_invoice":
             await create_invoice_button(conv)  # Renamed function
+            return
         elif data == b"get_balance":
             await get_balance_button(conv)
+            return
         elif data == b"get_wallet_details":
             await get_wallet_details_button(conv)
+            return
         elif data == b"decode_invoice":
             await decode_invoice_button(conv)
+            return
         elif data == b"pay_invoice":
             await conv.send_message("<b>Please provide an invoice to pay:</b>", parse_mode="html")
             invoice = (await conv.get_response()).text
             await pay_invoice_button(conv, invoice)
+            return
         elif data == b"check_invoice":
             await check_invoice_button(conv)
+            return
         elif data == b"create_paylink":
             await create_paylink_button(conv)
+            return
         else:
             await event.answer("Unknown action")
 
@@ -409,8 +416,10 @@ async def create_paylink(event):
 async def main():
     await client.start(bot_token=bot_token)
     print('(Press Ctrl+C to stop)')
-    await client.run_until_disconnected()
-    await lnbits_api.close()
+    try:
+        await client.run_until_disconnected()
+    finally:
+        await lnbits_api.close()
 
 
 if __name__ == '__main__':
