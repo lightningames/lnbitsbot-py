@@ -7,21 +7,26 @@ import asyncio
 import qrcode
 import io
 import json
+from dotenv import load_dotenv
+import os
 
-api_id = ''  # telegram dev api
-api_hash = ''  # telegram dev api
-bot_token = ''  # botfather token
+load_dotenv()
+
+api_id = os.environ.get('TELEGRAM_API_ID')  # telegram dev api
+api_hash = os.environ.get('TELEGRAM_API_HASH')  # telegram dev api
+bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')  # botfather token
+
 
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 lnbits_api = LnbitsAPI(config_file="config.yml")
 
 
-async def get_balance(conv):
+async def get_balance_button(conv):
     balance = await lnbits_api.get_wallet_balance()
     await conv.send_message(f'<b>Your wallet balance is:</b> {balance} sats', parse_mode="html")
 
 
-async def get_wallet_details(conv):
+async def get_wallet_details_button(conv):
     wallet_details = await lnbits_api.get_wallet_details()
 
     wallet_name = wallet_details['name']
@@ -36,7 +41,7 @@ async def get_wallet_details(conv):
     await conv.send_message(response, parse_mode='html')
 
 
-async def create_invoice(conv):
+async def create_invoice_button(conv):
     # Ask for amount
     await conv.send_message("<b>Let's create an invoice! First, please enter the amount (in SATs):</b>", parse_mode="html")
     amount = int((await conv.get_response()).text)
@@ -82,7 +87,7 @@ async def create_invoice(conv):
     await conv.send_message(payment_request)
 
 
-async def decode_invoice(conv):
+async def decode_invoice_button(conv):
     # Ask for invoice
     await conv.send_message("<b>Please provide an invoice to decode:</b>", parse_mode="html")
     invoice = (await conv.get_response()).text
@@ -105,15 +110,16 @@ async def decode_invoice(conv):
         await conv.send_message(chunk, parse_mode="html")
 
 
-async def pay_invoice(conv, invoice):
+async def pay_invoice_button(conv, invoice):
     payment_result = await lnbits_api.pay_invoice(invoice)
     if payment_result is None:
         await conv.send_message('<b>Payment successful!</b>', parse_mode="html")
     else:
-        await conv.send_message(f'<b>Payment failed:</b> {payment_result}', parse_mode="html")
+        error_message = payment_result.get('detail', 'Unknown error')
+        await conv.send_message(f'<b>Payment failed:</b> {error_message}', parse_mode="html")
 
 
-async def check_invoice(conv):
+async def check_invoice_button(conv):
     # Ask for payment hash
     await conv.send_message("Please provide a payment hash to check:")
     payment_hash = (await conv.get_response()).text
@@ -125,7 +131,7 @@ async def check_invoice(conv):
     await conv.send_message(f'<b>Invoice status:</b>\n<pre>{invoice_status}</pre>', parse_mode="html")
 
 
-async def create_paylink(conv):
+async def create_paylink_button(conv):
     # Ask for description
     await conv.send_message(
         "<b>Let's create your paylink! I'll need some information to get started. First, what's a good description for this paylink?</b>",
@@ -174,9 +180,9 @@ async def lightning_menu(event):
         [Button.inline("🔍 Decode Invoice", b"decode_invoice")],
         [Button.inline("💸 Pay Invoice", b"pay_invoice")],
         [Button.inline("🔖 Check Invoice", b"check_invoice")],
-        [Button.inline("🔗 Create PayLink", b"create_paylink")],
+        [Button.inline("🔗 Create LNURLp", b"create_paylink")],
     ]
-    await event.respond("<b>Welcome to the lnbits telegram bot!</b>", buttons=buttons, parse_mode="html")
+    await event.respond("<b>Welcome to the lnbits telegram bot! Choose a command or type the command (i.e. /create_invoice) to get started</b>", buttons=buttons, parse_mode="html")
 
 
 @client.on(events.CallbackQuery)
@@ -184,21 +190,21 @@ async def handle_callback_query(event):
     data = event.data
     async with client.conversation(event.chat_id, timeout=60) as conv:
         if data == b"create_invoice":
-            await create_invoice(conv)
+            await create_invoice_button(conv)  # Renamed function
         elif data == b"get_balance":
-            await get_balance(conv)
+            await get_balance_button(conv)
         elif data == b"get_wallet_details":
-            await get_wallet_details(conv)
+            await get_wallet_details_button(conv)
         elif data == b"decode_invoice":
-            await decode_invoice(conv)
+            await decode_invoice_button(conv)
         elif data == b"pay_invoice":
             await conv.send_message("<b>Please provide an invoice to pay:</b>", parse_mode="html")
             invoice = (await conv.get_response()).text
-            await pay_invoice(conv, invoice)
+            await pay_invoice_button(conv, invoice)
         elif data == b"check_invoice":
-            await check_invoice(conv)
+            await check_invoice_button(conv)
         elif data == b"create_paylink":
-            await create_paylink(conv)
+            await create_paylink_button(conv)
         else:
             await event.answer("Unknown action")
 

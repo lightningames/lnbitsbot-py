@@ -1,0 +1,6 @@
+telethon
+Pillow
+qrcode
+aiohttp
+pylnbits
+python-dotenv

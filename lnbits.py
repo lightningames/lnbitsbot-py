@@ -77,5 +77,15 @@ class LnbitsAPI:
             delete_result = await lw.delete_paylink(pay_id=pay_id)
             return delete_result
 
+    async def pay_invoice(self, bolt11):
+        async with self.session:
+            uw = UserWallet(self.config, self.session)
+            try:
+                payment_result = await uw.pay_invoice(True, bolt11)
+                return payment_result
+            except Exception as e:
+                print("Error while paying invoice (LnbitsAPI):", e)
+                return None
+
     async def close(self):
         await self.session.close()

@@ -1,0 +1,8 @@
+.env
+.venv
+old-bot.py
+placeholder.py
+.vscode
+bot.session
+bot.session-journal
+__pycache__
