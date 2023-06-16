@@ -243,7 +243,7 @@ async def handle_callback_query(event):
 
     async def handle_conversation():
         try:
-            async with client.conversation(chat_id, timeout=5) as conv:
+            async with client.conversation(chat_id, timeout=60) as conv:
                 ongoing_conversations[chat_id] = conv
                 # print(f"New conversation started with chat_id {chat_id}.")
                 if data == b"create_invoice":
@@ -320,7 +320,7 @@ async def get_wallet_details(event):
 @client.on(events.NewMessage(pattern='/create_invoice'))
 async def create_invoice(event):
     try:
-        async with client.conversation(event.chat_id, timeout=5) as conv:
+        async with client.conversation(event.chat_id, timeout=60) as conv:
             # Ask for amount
             await conv.send_message("<b>Let's create an invoice! First, please enter the amount (in SATs):</b>", parse_mode="html")
             while True:
@@ -383,7 +383,7 @@ def split_message_into_chunks(message, max_length=4096):
 @client.on(events.NewMessage(pattern='/decode_invoice'))
 async def decode_invoice(event):
     try:
-        async with client.conversation(event.chat_id, timeout=5) as conv:
+        async with client.conversation(event.chat_id, timeout=60) as conv:
             # Ask for invoice
             await conv.send_message("<b>Please provide an invoice to decode:</b>", parse_mode="html")
             invoice = (await conv.get_response()).text
@@ -434,7 +434,7 @@ async def pay_invoice(event):
 @client.on(events.NewMessage(pattern='/check_invoice'))
 async def check_invoice(event):
     try:
-        async with client.conversation(event.chat_id, timeout=5) as conv:
+        async with client.conversation(event.chat_id, timeout=60) as conv:
             # Ask for payment hash
             await conv.send_message("<b>Please provide a payment hash to check:</b>", parse_mode="html")
             payment_hash = (await conv.get_response()).text
@@ -454,7 +454,7 @@ async def check_invoice(event):
 @client.on(events.NewMessage(pattern='/create_paylink'))
 async def create_paylink(event):
     try:
-        async with client.conversation(event.chat_id, timeout=5) as conv:
+        async with client.conversation(event.chat_id, timeout=60) as conv:
             # Ask for description
             await conv.send_message("<b>Let's create your paylink! I'll need some information to get started. First, what's a good description for this paylink?</b>", parse_mode="html")
             description = (await conv.get_response()).text
