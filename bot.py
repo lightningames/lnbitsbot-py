@@ -29,14 +29,14 @@ class ConversationCanceled(Exception):
 
 
 async def get_balance_button(conv):
-    print("get_balance_button: started")
+    # print("get_balance_button: started")
     balance = await lnbits_api.get_wallet_balance()
     await conv.send_message(f'<b>Your wallet balance is:</b> {balance} sats', parse_mode="html")
-    print("get_balance_button: finished")
+    # print("get_balance_button: finished")
 
 
 async def get_wallet_details_button(conv):
-    print("get_wallet_details_button: started")
+    # print("get_wallet_details_button: started")
     wallet_details = await lnbits_api.get_wallet_details()
 
     wallet_name = wallet_details['name']
@@ -49,17 +49,17 @@ async def get_wallet_details_button(conv):
     )
 
     await conv.send_message(response, parse_mode='html')
-    print("get_wallet_details_button: finished")
+    # print("get_wallet_details_button: finished")
 
 
 async def create_invoice_button(conv):
     # Ask for amount
-    print("check_invoice_button: started")
+    # print("check_invoice_button: started")
     await conv.send_message("<b>Let's create an invoice! First, please enter the amount (in SATs):</b>", parse_mode="html")
     while True:
         try:
             amount = int((await conv.get_response()).text)
-            amount = abs(amount) 
+            amount = abs(amount)
             break
         except ValueError:
             await conv.send_message("<b>Please enter a valid numerical value for the amount.</b>", parse_mode="html")
@@ -103,11 +103,11 @@ async def create_invoice_button(conv):
     await conv.send_message(f'<b>Invoice for {amount} sats:</b>', parse_mode="html")
     await conv.send_file(file=img_data)
     await conv.send_message(payment_request)
-    print("check_invoice_button: finished")
+    # print("check_invoice_button: finished")
 
 
 async def decode_invoice_button(conv):
-    print("decode_invoice_button: started")
+    # print("decode_invoice_button: started")
     # Ask for invoice
     await conv.send_message("<b>Please provide an invoice to decode:</b>", parse_mode="html")
     invoice = (await conv.get_response()).text
@@ -128,23 +128,23 @@ async def decode_invoice_button(conv):
     # Send each chunk separately
     for chunk in message_chunks:
         await conv.send_message(chunk, parse_mode="html")
-    print("decode_invoice_button: finished")
+    # print("decode_invoice_button: finished")
 
 
 async def pay_invoice_button(conv, invoice):
-    print("pay_invoice_button: started")
+    # print("pay_invoice_button: started")
     payment_result = await lnbits_api.pay_invoice(invoice)
     if payment_result is None:
         await conv.send_message('<b>Payment successful!</b>', parse_mode="html")
     else:
         error_message = payment_result.get('detail', 'Unknown error')
         await conv.send_message(f'<b>Payment failed:</b> {error_message}', parse_mode="html")
-    print("pay_invoice_button: finished")
+    # print("pay_invoice_button: finished")
 
 
 async def check_invoice_button(conv):
     # Ask for payment hash
-    print("check_invoice_button: started")
+    # print("check_invoice_button: started")
     await conv.send_message("<b>Please provide a payment hash to check:</b>", parse_mode="html")
     payment_hash = (await conv.get_response()).text
 
@@ -153,11 +153,11 @@ async def check_invoice_button(conv):
 
     # Send invoice status
     await conv.send_message(f'<b>Invoice status:</b>\n<pre>{invoice_status}</pre>', parse_mode="html")
-    print("check_invoice_button: finished")
+    # print("check_invoice_button: finished")
 
 
 async def create_paylink_button(conv):
-    print("create_paylink_button: started")
+    # print("create_paylink_button: started")
     # Ask for description
     await conv.send_message(
         "<b>Let's create your paylink! I'll need some information to get started. First, what's a good description for this paylink?</b>",
@@ -211,7 +211,7 @@ async def create_paylink_button(conv):
         await conv.send_message(f"<b>Great! Here's your lightning paylink:</b>\n{lnurl}", parse_mode="html")
     except Exception as e:
         await conv.send_message(f"<b>Error creating PayLink: {e}</b>", parse_mode="html")
-    print("create_paylink_button: finished")
+    # print("create_paylink_button: finished")
 
 
 @client.on(events.NewMessage(pattern='/lightning'))
@@ -245,7 +245,7 @@ async def handle_callback_query(event):
         try:
             async with client.conversation(chat_id, timeout=5) as conv:
                 ongoing_conversations[chat_id] = conv
-                print(f"New conversation started with chat_id {chat_id}.")
+                # print(f"New conversation started with chat_id {chat_id}.")
                 if data == b"create_invoice":
                     await create_invoice_button(conv)
                 elif data == b"get_balance":
@@ -513,7 +513,7 @@ async def create_paylink(event):
 
 async def main():
     await client.start(bot_token=bot_token)
-    print('(Press Ctrl+C to stop)')
+    # print('(Press Ctrl+C to stop)')
     try:
         await client.run_until_disconnected()
     finally:
