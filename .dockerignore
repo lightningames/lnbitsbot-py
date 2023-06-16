@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
+old-bot.py
+placeholder.py

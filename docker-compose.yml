@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  telegram_bot:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+    env_file:
+      - .env

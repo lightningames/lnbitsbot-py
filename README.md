@@ -5,7 +5,7 @@ A starter template for running bots based off of lnbits.com or your own install.
 Basic outline with lnbits as the backend for a python TG bot:
 
 - create a wallet on lnbits through User Manager
-- create and send invoices 
+- create and send invoices
 - pay lightning invoices
 - link user to lnbits web interface
 - Use the [pylnbits sdk](github.com/lightningames/pylnbits)
@@ -22,3 +22,12 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+See .env.example for the specific ID, Hash, and Token you will need to create your own bot.
+
+You will need to create a config.yml file in the root directory with the following information:
+
+```yaml
+lnbits_url: ""
+in_key: ""
+admin_key: ""
+```
