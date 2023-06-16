@@ -10,6 +10,7 @@ import json
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
 
 api_id = os.environ.get('TELEGRAM_API_ID')  # telegram dev api
@@ -20,13 +21,22 @@ bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')  # botfather token
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 lnbits_api = LnbitsAPI(config_file="config.yml")
 
+# Tracks conversation status
+ongoing_conversations = {}
+
+class ConversationCanceled(Exception):
+    pass
+
 
 async def get_balance_button(conv):
+    print("get_balance_button: started")
     balance = await lnbits_api.get_wallet_balance()
     await conv.send_message(f'<b>Your wallet balance is:</b> {balance} sats', parse_mode="html")
+    print("get_balance_button: finished")
 
 
 async def get_wallet_details_button(conv):
+    print("get_wallet_details_button: started")
     wallet_details = await lnbits_api.get_wallet_details()
 
     wallet_name = wallet_details['name']
@@ -39,10 +49,12 @@ async def get_wallet_details_button(conv):
     )
 
     await conv.send_message(response, parse_mode='html')
+    print("get_wallet_details_button: finished")
 
 
 async def create_invoice_button(conv):
     # Ask for amount
+    print("check_invoice_button: started")
     await conv.send_message("<b>Let's create an invoice! First, please enter the amount (in SATs):</b>", parse_mode="html")
     amount = int((await conv.get_response()).text)
 
@@ -85,9 +97,11 @@ async def create_invoice_button(conv):
     await conv.send_message(f'<b>Invoice for {amount} sats:</b>', parse_mode="html")
     await conv.send_file(file=img_data)
     await conv.send_message(payment_request)
+    print("check_invoice_button: finished")
 
 
 async def decode_invoice_button(conv):
+    print("decode_invoice_button: started")
     # Ask for invoice
     await conv.send_message("<b>Please provide an invoice to decode:</b>", parse_mode="html")
     invoice = (await conv.get_response()).text
@@ -108,19 +122,23 @@ async def decode_invoice_button(conv):
     # Send each chunk separately
     for chunk in message_chunks:
         await conv.send_message(chunk, parse_mode="html")
+    print("decode_invoice_button: finished")
 
 
 async def pay_invoice_button(conv, invoice):
+    print("pay_invoice_button: started")
     payment_result = await lnbits_api.pay_invoice(invoice)
     if payment_result is None:
         await conv.send_message('<b>Payment successful!</b>', parse_mode="html")
     else:
         error_message = payment_result.get('detail', 'Unknown error')
         await conv.send_message(f'<b>Payment failed:</b> {error_message}', parse_mode="html")
+    print("pay_invoice_button: finished")
 
 
 async def check_invoice_button(conv):
     # Ask for payment hash
+    print("check_invoice_button: started")
     await conv.send_message("Please provide a payment hash to check:")
     payment_hash = (await conv.get_response()).text
 
@@ -129,9 +147,11 @@ async def check_invoice_button(conv):
 
     # Send invoice status
     await conv.send_message(f'<b>Invoice status:</b>\n<pre>{invoice_status}</pre>', parse_mode="html")
+    print("check_invoice_button: finished")
 
 
 async def create_paylink_button(conv):
+    print("create_paylink_button: started")
     # Ask for description
     await conv.send_message(
         "<b>Let's create your paylink! I'll need some information to get started. First, what's a good description for this paylink?</b>",
@@ -169,6 +189,7 @@ async def create_paylink_button(conv):
         await conv.send_message(f"<b>Great! Here's your lightning paylink:</b>\n{lnurl}", parse_mode="html")
     except Exception as e:
         await conv.send_message(f"<b>Error creating PayLink: {e}</b>", parse_mode="html")
+    print("create_paylink_button: finished")
 
 
 @client.on(events.NewMessage(pattern='/lightning'))
@@ -188,33 +209,49 @@ async def lightning_menu(event):
 @client.on(events.CallbackQuery)
 async def handle_callback_query(event):
     data = event.data
-    async with client.conversation(event.chat_id, timeout=60) as conv:
-        if data == b"create_invoice":
-            await create_invoice_button(conv)  # Renamed function
-            return
-        elif data == b"get_balance":
-            await get_balance_button(conv)
-            return
-        elif data == b"get_wallet_details":
-            await get_wallet_details_button(conv)
-            return
-        elif data == b"decode_invoice":
-            await decode_invoice_button(conv)
-            return
-        elif data == b"pay_invoice":
-            await conv.send_message("<b>Please provide an invoice to pay:</b>", parse_mode="html")
-            invoice = (await conv.get_response()).text
-            await pay_invoice_button(conv, invoice)
-            return
-        elif data == b"check_invoice":
-            await check_invoice_button(conv)
-            return
-        elif data == b"create_paylink":
-            await create_paylink_button(conv)
-            return
-        else:
-            await event.answer("Unknown action")
+    chat_id = event.chat_id
 
+    # Cancel ongoing conversation if any
+    if chat_id in ongoing_conversations:
+        ongoing_conversations[chat_id].cancel()
+        del ongoing_conversations[chat_id]
+
+    async def handle_conversation():
+        try:
+            async with client.conversation(chat_id, timeout=60) as conv:
+                ongoing_conversations[chat_id] = conv
+                print(f"New conversation started with chat_id {chat_id}.")
+                if data == b"create_invoice":
+                    await create_invoice_button(conv)
+                elif data == b"get_balance":
+                    await get_balance_button(conv)
+                elif data == b"get_wallet_details":
+                    await get_wallet_details_button(conv)
+                elif data == b"decode_invoice":
+                    await decode_invoice_button(conv)
+                elif data == b"pay_invoice":
+                    await conv.send_message("<b>Please provide an invoice to pay:</b>", parse_mode="html")
+                    invoice = (await conv.get_response()).text
+                    await pay_invoice_button(conv, invoice)
+                elif data == b"check_invoice":
+                    await check_invoice_button(conv)
+                elif data == b"create_paylink":
+                    await create_paylink_button(conv)
+                else:
+                    await event.answer("Unknown action")
+        except asyncio.TimeoutError:
+            await event.respond("<b>Conversation timed out. Please select an option from the menu, or type /lightning to see the menu again.</b>", parse_mode="html")
+        except ConversationCanceled:
+            pass
+        except asyncio.CancelledError:
+            pass
+        finally:
+            if chat_id in ongoing_conversations:
+                del ongoing_conversations[chat_id]
+
+    # Start a new conversation with a small delay
+    await asyncio.sleep(0.5)
+    asyncio.create_task(handle_conversation())
 
 def split_message_into_chunks(message, max_length=4096):
     return [message[i:i + max_length] for i in range(0, len(message), max_length)]
@@ -358,7 +395,7 @@ async def pay_invoice(event):
 async def check_invoice(event):
     async with client.conversation(event.chat_id, timeout=60) as conv:
         # Ask for payment hash
-        await conv.send_message("Please provide a payment hash to check:")
+        await conv.send_message("<b>Please provide a payment hash to check:</b>")
         payment_hash = (await conv.get_response()).text
 
         # Check invoice status
