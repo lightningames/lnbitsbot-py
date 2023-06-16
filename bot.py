@@ -139,7 +139,7 @@ async def pay_invoice_button(conv, invoice):
 async def check_invoice_button(conv):
     # Ask for payment hash
     print("check_invoice_button: started")
-    await conv.send_message("Please provide a payment hash to check:")
+    await conv.send_message("<b>Please provide a payment hash to check:</b>", parse_mode="html")
     payment_hash = (await conv.get_response()).text
 
     # Check invoice status
@@ -215,6 +215,9 @@ async def handle_callback_query(event):
     if chat_id in ongoing_conversations:
         ongoing_conversations[chat_id].cancel()
         del ongoing_conversations[chat_id]
+
+    # Answer the callback query before starting a new conversation
+    await event.answer()
 
     async def handle_conversation():
         try:
