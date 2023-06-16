@@ -59,6 +59,7 @@ async def create_invoice_button(conv):
     while True:
         try:
             amount = int((await conv.get_response()).text)
+            amount = abs(amount) 
             break
         except ValueError:
             await conv.send_message("<b>Please enter a valid numerical value for the amount.</b>", parse_mode="html")
@@ -168,6 +169,7 @@ async def create_paylink_button(conv):
     while True:
         try:
             amount = int((await conv.get_response()).text)
+            amount = abs(amount)
             break
         except ValueError:
             await conv.send_message("<b>Please enter a valid numerical value for the amount.</b>", parse_mode="html")
@@ -189,6 +191,7 @@ async def create_paylink_button(conv):
     while True:
         try:
             comment_chars = int((await conv.get_response()).text)
+            comment_chars = abs(comment_chars)
             break
         except ValueError:
             await conv.send_message("<b>Please enter a valid numerical value for the comment chars.</b>", parse_mode="html")
@@ -323,6 +326,7 @@ async def create_invoice(event):
             while True:
                 try:
                     amount = int((await conv.get_response()).text)
+                    amount = abs(amount)
                     break
                 except ValueError:
                     await conv.send_message("<b>Please enter a valid numerical value for the amount.</b>", parse_mode="html")
@@ -460,6 +464,7 @@ async def create_paylink(event):
             while True:
                 try:
                     amount = int((await conv.get_response()).text)
+                    amount = abs(amount)
                     break
                 except ValueError:
                     await conv.send_message("<b>Please enter a valid numerical value for the amount.</b>", parse_mode="html")
@@ -480,6 +485,7 @@ async def create_paylink(event):
             while True:
                 try:
                     comment_chars = int((await conv.get_response()).text)
+                    comment_chars = abs(comment_chars)
                     break
                 except ValueError:
                     await conv.send_message("<b>Please enter a valid numerical value for the comment chars.</b>", parse_mode="html")
